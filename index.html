@@ -1,0 +1,176 @@
+<html>
+<head>
+<script>
+var dpr = 1;
+var container;
+
+var total_px = 0;
+var cur_px = 0;
+
+var budget_px = 4096*4096;
+
+function d(f)
+{
+  return Math.floor(f*100)/100;
+}
+
+function destroy(canvas)
+{
+  if(canvas.parentElement) canvas.parentElement.removeChild(canvas);
+
+  var px = canvas.width*canvas.height;
+  cur_px -= px;
+  console.log("destroy\t"+canvas.width+"x"+canvas.height+"=-"+px+"\ttotal:"+total_px+" ( "+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( -"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+
+  canvas.width = 0;
+  canvas.height = 0;
+  canvas = 0;
+}
+function create(pw,ph,sw,sh,append)
+{
+  var canvas = document.createElement('canvas');
+  canvas.width  = pw;
+  canvas.height = ph;
+  canvas.style.width = sw+"px";
+  canvas.style.height = sh+"px";
+
+  var px = pw*ph;
+  total_px += px;
+  cur_px += px;
+  console.log("create\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( +"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+
+  canvas.context = canvas.getContext('2d');
+  canvas.context.imageSmoothingEnabled = 0;
+  canvas.context.strokeStyle = "#000000";
+  canvas.context.fillRect(pw/10,ph/10,pw/10,ph/10);
+  if(append) container.appendChild(canvas);
+  return canvas;
+}
+function size(w,h)
+{
+  container.style.width = w;
+  container.style.height = h;
+  if(!dpr) dpr = window.devicePixelRatio;
+  if(!dpr) dpr = 1;
+  pw = Math.ceil(w*dpr);
+  ph = Math.ceil(h*dpr);
+  if(container.firstChild) destroy(container.firstChild);
+  var canvas = create(pw,ph,w,h,1);
+}
+function resize()
+{
+  //size(window.innerWidth,window.innerHeight);
+}
+function begin()
+{
+  container = document.getElementById("stage_container");
+  if(container.firstChild) container.removeChild(container.firstChild);
+  //resize();
+  //size(4096,4096);
+}
+window.addEventListener("load",begin,{capture:true,once:true,passive:true});
+window.addEventListener("resize",resize,{capture:true,once:false,passive:true});
+
+function test(n)
+{
+  var body = document.getElementById("body");
+  var ni = 0;
+  for(var i = 0; i < body.children.length; i++)
+  {
+    if(body.children[i].className == "btn")
+    {
+      ni++;
+      if(ni == n) console.log("Test "+n+": "+body.children[i].children[1].innerHTML);
+      body.removeChild(body.children[i]);
+      i--;
+    }
+  }
+
+  var c;
+  var pw;
+  var ph;
+  var px;
+  switch(n)
+  {
+    case 0: //SAFE
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      break;
+    case 1: //EDGE
+      pw = 4096;
+      ph = 4096;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      break;
+    case 2: //OVER
+      pw = 4097;
+      ph = 4097;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      break;
+    case 3: //DOUBLE
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      c = create(pw,ph,100,100,1);
+      break;
+    case 4: //DELETE
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      destroy(c);
+      c = create(pw,ph,100,100,1);
+      break;
+    case 5: //SHRINK
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      cur_px -= px;
+      pw = 4094;
+      ph = 4094;
+      px = pw*ph;
+      c.width = pw;
+      c.height = ph;
+      total_px += px;
+      cur_px += px;
+      console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+      break;
+    case 6: //RESIZE
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      cur_px -= px;
+      pw = 4094;
+      ph = 4096;
+      px = pw*ph;
+      c.width = pw;
+      c.height = ph;
+      total_px += px;
+      cur_px += px;
+      console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+      break;
+  }
+
+}
+
+</script>
+</head>
+<body id="body">
+<div class="btn"><button onclick="test(0);">test 0</button><span>SAFE. Creates 1x4095x4095 canvas.</span></div>
+<div class="btn"><button onclick="test(1);">test 1</button><span>EDGE. Creates 1x4096x4096 canvas.</span></div>
+<div class="btn"><button onclick="test(2);">test 2</button><span>OVER. Creates 1x4097x4097 canvas.</span></div>
+<div class="btn"><button onclick="test(3);">test 3</button><span>DOUBLE. Creates 2x4095x4095 canvas.</span></div>
+<div class="btn"><button onclick="test(4);">test 4</button><span>DELETE. Creates 1x4095x4095 canvas, deletes, creates 1x4095x4095.</span></div>
+<div class="btn"><button onclick="test(5);">test 5</button><span>SHRINK. Creates 1x4095x4095 canvas, resizes to 1x4094x4094.</span></div>
+<div class="btn"><button onclick="test(6);">test 6</button><span>RESIZE. Creates 1x4095x4095 canvas, resizes to 1x4094x4096.</span></div>
+<div id="stage_container">
+</div>
+</body>
+</html>
+
