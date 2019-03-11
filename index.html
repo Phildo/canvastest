@@ -50,7 +50,7 @@ function create(pw,ph,sw,sh,append)
     case 1:
       canvas.context = canvas.getContext('2d');
       canvas.context.imageSmoothingEnabled = 0;
-      canvas.context.strokeStyle = "#000000";
+      canvas.context.fillStyle = "#000000";
       canvas.context.fillRect(pw/10,ph/10,pw/10,ph/10);
       break;
     case 2:
@@ -165,6 +165,11 @@ function test(n)
       total_px += px;
       cur_px += px;
       console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+      if(ctx_type == 1)
+      {
+        c.context.fillStyle = "#FF0000";
+        c.context.fillRect(2*pw/10,2*ph/10,pw/10,ph/10);
+      }
       break;
     case 7: //RESIZE
       pw = 4095;
@@ -180,6 +185,22 @@ function test(n)
       total_px += px;
       cur_px += px;
       console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+      if(ctx_type == 1)
+      {
+        c.context.fillStyle = "#FF0000";
+        c.context.fillRect(2*pw/10,2*ph/10,pw/10,ph/10);
+      }
+      break;
+    case 8: //CRASH
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      setInterval(function()
+      {
+        destroy(c);
+        c = create(pw,ph,100,100,1);
+      },1000);
       break;
   }
 
@@ -196,6 +217,7 @@ function test(n)
 <div class="btn"><button onclick="test(5);">test 5</button><span>DELETE. Creates 1x4095x4095 canvas, deletes, creates 1x4095x4095.</span></div>
 <div class="btn"><button onclick="test(6);">test 6</button><span>SHRINK. Creates 1x4095x4095 canvas, resizes to 1x4094x4094.</span></div>
 <div class="btn"><button onclick="test(7);">test 7</button><span>RESIZE. Creates 1x4095x4095 canvas, resizes to 1x4094x4096.</span></div>
+<div class="btn"><button onclick="test(8);">test 8</button><span>CRASH. Creates 1x4095x4095 canvas, destroy and recreate every second.</span></div>
 <div id="stage_container">
 </div>
 </body>
