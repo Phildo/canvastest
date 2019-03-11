@@ -4,6 +4,10 @@
 var dpr = 1;
 var container;
 
+var ctx_type = 0; //no context
+//var ctx_type = 1; //2d
+//var ctx_type = 2; //3d
+
 var total_px = 0;
 var cur_px = 0;
 
@@ -39,10 +43,20 @@ function create(pw,ph,sw,sh,append)
   cur_px += px;
   console.log("create\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( +"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
 
-  canvas.context = canvas.getContext('2d');
-  canvas.context.imageSmoothingEnabled = 0;
-  canvas.context.strokeStyle = "#000000";
-  canvas.context.fillRect(pw/10,ph/10,pw/10,ph/10);
+  switch(ctx_type)
+  {
+    case 0:
+      break;
+    case 1:
+      canvas.context = canvas.getContext('2d');
+      canvas.context.imageSmoothingEnabled = 0;
+      canvas.context.strokeStyle = "#000000";
+      canvas.context.fillRect(pw/10,ph/10,pw/10,ph/10);
+      break;
+    case 2:
+      canvas.context = canvas.getContext('3d');
+      break;
+  }
   if(append) container.appendChild(canvas);
   return canvas;
 }
@@ -71,6 +85,17 @@ function begin()
 window.addEventListener("load",begin,{capture:true,once:true,passive:true});
 window.addEventListener("resize",resize,{capture:true,once:false,passive:true});
 
+function incctx()
+{
+  ctx_type = (ctx_type+1)%3;
+  var disp = document.getElementById("ctx_type");
+  switch(ctx_type)
+  {
+    case 0: disp.innerHTML = "NO context"; break;
+    case 1: disp.innerHTML = "Canvas2d context"; break;
+    case 2: disp.innerHTML = "WebGL context"; break;
+  }
+}
 function test(n)
 {
   var body = document.getElementById("body");
@@ -79,10 +104,11 @@ function test(n)
   {
     if(body.children[i].className == "btn")
     {
-      ni++;
+      if(ni == 0) console.log(body.children[i].children[1].innerHTML);
       if(ni == n) console.log("Test "+n+": "+body.children[i].children[1].innerHTML);
       body.removeChild(body.children[i]);
       i--;
+      ni++;
     }
   }
 
@@ -92,32 +118,32 @@ function test(n)
   var px;
   switch(n)
   {
-    case 0: //SAFE
+    case 1: //SAFE
       pw = 4095;
       ph = 4095;
       px = pw*ph;
       c = create(pw,ph,100,100,1);
       break;
-    case 1: //EDGE
+    case 2: //EDGE
       pw = 4096;
       ph = 4096;
       px = pw*ph;
       c = create(pw,ph,100,100,1);
       break;
-    case 2: //OVER
+    case 3: //OVER
       pw = 4097;
       ph = 4097;
       px = pw*ph;
       c = create(pw,ph,100,100,1);
       break;
-    case 3: //DOUBLE
+    case 4: //DOUBLE
       pw = 4095;
       ph = 4095;
       px = pw*ph;
       c = create(pw,ph,100,100,1);
       c = create(pw,ph,100,100,1);
       break;
-    case 4: //DELETE
+    case 5: //DELETE
       pw = 4095;
       ph = 4095;
       px = pw*ph;
@@ -125,7 +151,7 @@ function test(n)
       destroy(c);
       c = create(pw,ph,100,100,1);
       break;
-    case 5: //SHRINK
+    case 6: //SHRINK
       pw = 4095;
       ph = 4095;
       px = pw*ph;
@@ -140,7 +166,7 @@ function test(n)
       cur_px += px;
       console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
       break;
-    case 6: //RESIZE
+    case 7: //RESIZE
       pw = 4095;
       ph = 4095;
       px = pw*ph;
@@ -162,13 +188,14 @@ function test(n)
 </script>
 </head>
 <body id="body">
-<div class="btn"><button onclick="test(0);">test 0</button><span>SAFE. Creates 1x4095x4095 canvas.</span></div>
-<div class="btn"><button onclick="test(1);">test 1</button><span>EDGE. Creates 1x4096x4096 canvas.</span></div>
-<div class="btn"><button onclick="test(2);">test 2</button><span>OVER. Creates 1x4097x4097 canvas.</span></div>
-<div class="btn"><button onclick="test(3);">test 3</button><span>DOUBLE. Creates 2x4095x4095 canvas.</span></div>
-<div class="btn"><button onclick="test(4);">test 4</button><span>DELETE. Creates 1x4095x4095 canvas, deletes, creates 1x4095x4095.</span></div>
-<div class="btn"><button onclick="test(5);">test 5</button><span>SHRINK. Creates 1x4095x4095 canvas, resizes to 1x4094x4094.</span></div>
-<div class="btn"><button onclick="test(6);">test 6</button><span>RESIZE. Creates 1x4095x4095 canvas, resizes to 1x4094x4096.</span></div>
+<div class="btn"><button onclick="incctx();">toggle context</button><span id="ctx_type">NO context</span></div>
+<div class="btn"><button onclick="test(1);">test 1</button><span>SAFE. Creates 1x4095x4095 canvas.</span></div>
+<div class="btn"><button onclick="test(2);">test 2</button><span>EDGE. Creates 1x4096x4096 canvas.</span></div>
+<div class="btn"><button onclick="test(3);">test 3</button><span>OVER. Creates 1x4097x4097 canvas.</span></div>
+<div class="btn"><button onclick="test(4);">test 4</button><span>DOUBLE. Creates 2x4095x4095 canvas.</span></div>
+<div class="btn"><button onclick="test(5);">test 5</button><span>DELETE. Creates 1x4095x4095 canvas, deletes, creates 1x4095x4095.</span></div>
+<div class="btn"><button onclick="test(6);">test 6</button><span>SHRINK. Creates 1x4095x4095 canvas, resizes to 1x4094x4094.</span></div>
+<div class="btn"><button onclick="test(7);">test 7</button><span>RESIZE. Creates 1x4095x4095 canvas, resizes to 1x4094x4096.</span></div>
 <div id="stage_container">
 </div>
 </body>
