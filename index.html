@@ -239,6 +239,81 @@ function test(n)
         }
       },1000);
       break;
+    case 10: //LARGE
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      for(var i = 0; i < 8; i++)
+        c = create(pw,ph,100,100,1);
+      break;
+    case 11: //GROW
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = create(pw,ph,100,100,1);
+      setInterval(function()
+      {
+        c = create(pw,ph,100,100,1);
+      },1000);
+      break;
+    case 12: //LARGE RE-REALLOC
+      pw = 4095;
+      ph = 4095;
+      px = pw*ph;
+      c = [];
+      for(var i = 0; i < 2; i++)
+        c[i] = create(pw,ph,100,100,1);
+      setInterval(function()
+      {
+        for(var i = 0; i < 2; i++)
+        {
+          destroy(c[i]);
+          c[i] = create(pw,ph,100,100,1);
+        }
+      },1000);
+      break;
+    case 13: //RE-RESIZE
+      pw = 4096;
+      ph = 4094;
+      px = pw*ph;
+      c = [];
+      for(var i = 0; i < 2; i ++)
+        c[i] = create(pw,ph,100,100,1);
+      setInterval(function()
+      {
+        for(var i = 0; i < 2; i++)
+        {
+          cur_px -= px;
+          pw = 4094;
+          ph = 4096;
+          px = pw*ph;
+          c[i].width = pw;
+          c[i].height = ph;
+          total_px += px;
+          cur_px += px;
+          console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+          if(ctx_type == 1)
+          {
+            c[i].context.fillStyle = "#FF0000";
+            c[i].context.fillRect(2*pw/10,2*ph/10,pw/10,ph/10);
+          }
+          cur_px -= px;
+          pw = 4096;
+          ph = 4094;
+          px = pw*ph;
+          c[i].width = pw;
+          c[i].height = ph;
+          total_px += px;
+          cur_px += px;
+          console.log("resize\t"+pw+"x"+ph+"=+"+px+"\ttotal:"+total_px+" ( +"+d(px/total_px)+"% of total\t=\t"+d(total_px/budget_px)+"% of budget )\tnet:"+cur_px+" ( ~"+d(px/cur_px)+"% of net\t=\t"+d(cur_px/budget_px)+"% of budget )");
+          if(ctx_type == 1)
+          {
+            c[i].context.fillStyle = "#FF0000";
+            c[i].context.fillRect(2*pw/10,2*ph/10,pw/10,ph/10);
+          }
+        }
+      },1000);
+      break;
   }
 
 }
@@ -256,6 +331,10 @@ function test(n)
 <div class="btn"><button onclick="test(7);">test 7</button><span>RESIZE. Creates 1x4095x4095 canvas, resizes to 1x4094x4096.</span></div>
 <div class="btn"><button onclick="test(8);">test 8</button><span>RE-REALLOC. Creates 1x4095x4095 canvas, destroy and recreate every second.</span></div>
 <div class="btn"><button onclick="test(9);">test 9</button><span>RE-RESIZE. Creates 1x4096x4094 canvas, resizes to 1x4094x4096 and back every second.</span></div>
+<div class="btn"><button onclick="test(10);">test 10</button><span>LARGE. Creates 8x4095x4095 canvas.</span></div>
+<div class="btn"><button onclick="test(11);">test 11</button><span>GROW. Creates 1x4095x4095 canvas (additionally) every second.</span></div>
+<div class="btn"><button onclick="test(12);">test 12</button><span>LARGE RE-REALLOC. Creates 2x4095x4095 canvas, destroy and recreate every second.</span></div>
+<div class="btn"><button onclick="test(13);">test 13</button><span>LARGE RE-RESIZE. Creates 2x4096x4094 canvas, resizes to 2x4094x4096 and back every second.</span></div>
 <div id="stage_container">
 </div>
 </body>
